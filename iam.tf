@@ -38,4 +38,34 @@ resource "aws_iam_role" "github_actions" {
   tags = { IAC = "true" }
 }
 
+resource "aws_iam_role" "tf-role" {
+  name = "tf-role"
 
+  assume_role_policy = jsonencode({
+    Statement = [
+      {
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "token.actions.githubusercontent.com:aud" : [
+              "sts.amazonaws.com"
+            ]
+          },
+          StringLike : {
+            "token.actions.githubusercontent.com:sub" : [
+              "repo:maxmillernunes/fast-feet-iac:ref:refs/heads/main",
+              "repo:maxmillernunes/fast-feet-iac:ref:refs/heads/main"
+            ]
+          }
+        }
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.github.arn
+        }
+      }
+    ]
+    Version = "2012-10-17"
+  })
+
+  tags = { IAC = "true" }
+}
